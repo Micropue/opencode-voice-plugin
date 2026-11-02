@@ -15,8 +15,8 @@ export function waveform(levels: readonly number[], width: number): string {
 export function progressBar(percent: number, width: number): string {
   const size = Math.max(1, Math.floor(width));
   const value = Math.max(0, Math.min(100, Number.isFinite(percent) ? percent : 0));
-  const filled = Math.round((value / 100) * size);
-  return "█".repeat(filled) + "░".repeat(size - filled);
+  const filled = value > 0 ? Math.max(1, Math.round((value / 100) * size)) : 0;
+  return "█".repeat(filled) + "─".repeat(size - filled);
 }
 
 export function duration(seconds: number): string {

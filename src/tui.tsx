@@ -8,6 +8,7 @@ import { deliverText, ensureSession } from "./voice/paste.js";
 import { VoiceSession, defaultHelperPath, helperExists, type VoiceHelperEvent } from "./voice/helper.js";
 import { Speaker } from "./voice/tts.js";
 import { duration, oneLine, progressBar, waveform } from "./format.js";
+import { palette } from "./theme.js";
 import type { Controller, HistoryItem, PanelTab, VoiceState } from "./types.js";
 
 const PANEL = "voice.panel";
@@ -132,6 +133,22 @@ export default Plugin.define({
     const [history, updateHistory] = context.storage.store<{ items: HistoryItem[] }>("history", {
       initial: { items: [] },
     });
+    const demoHistory: HistoryItem[] =
+      process.env.OPENCODE_VOICE_DEBUG_HISTORY === "1"
+        ? [
+            { text: "打开项目并切换到 main 分支", at: Date.now() - 8 * 60_000 },
+            { text: "看一下最近的 git diff", at: Date.now() - 5 * 60_000 },
+            { text: "运行测试并总结失败原因", at: Date.now() - 2 * 60_000 },
+            { text: "检查 Go 套餐额度", at: Date.now() - 60_000 },
+          ]
+        : [];
+
+    if (process.env.OPENCODE_VOICE_DEBUG_DEMO === "1") {
+      setState("listening");
+      setElapsed(7.2);
+      setPartial("看一下最近的 git diff");
+      setLevels(Array.from({ length: 160 }, (_, index) => 0.12 + 0.72 * Math.abs(Math.sin(index / 4.5))));
+    }
 
     const speaker = new Speaker({ voice: settings.voice, rate: settings.rate });
     speaker.onState = (speaking) => {
@@ -429,7 +446,7 @@ export default Plugin.define({
       elapsed,
       partial,
       lastText,
-      history: () => history.items,
+      history: () => (demoHistory.length > 0 ? [...demoHistory, ...history.items] : history.items),
       maxSeconds: settings.maxSeconds,
       shortcutLabel: displayKey(settings.toggleKeybind),
       panelShortcutLabel: displayKey(settings.panelKeybind),
@@ -459,9 +476,9 @@ export default Plugin.define({
           }
         };
         const color = () => {
-          if (state() === "listening") return context.theme.text.feedback.error.base;
-          if (state() === "transcribing" || state() === "pasting") return context.theme.text.feedback.warning.base;
-          if (state() === "speaking") return context.theme.text.feedback.success.base;
+          if (state() === "listening") return palette.error;
+          if (state() === "transcribing" || state() === "pasting") return palette.warning;
+          if (state() === "speaking") return palette.success;
           return context.theme.text.muted;
         };
         return (
@@ -480,9 +497,9 @@ export default Plugin.define({
       const percent = usage?.percent ?? 0;
       const color = () => {
         if (!usage) return context.theme.text.muted;
-        if (usage.limited || percent >= 85) return context.theme.text.feedback.error.base;
-        if (percent >= 60) return context.theme.text.feedback.warning.base;
-        return context.theme.text.feedback.success.base;
+        if (usage.limited || percent >= 85) return palette.error;
+        if (percent >= 60) return palette.warning;
+        return palette.accent;
       };
       return (
         <text fg={color()} onMouseDown={() => void openUsagePanel()}>
@@ -506,7 +523,7 @@ export default Plugin.define({
         const width = Math.max(20, Math.min(52, context.renderer.width - 12));
         return (
           <box flexDirection="column">
-            <text fg={state() === "listening" ? context.theme.text.feedback.error.base : context.theme.text.feedback.warning.base}>
+            <text fg={state() === "listening" ? palette.error : palette.warning}>
               {waveform(levels(), width)} {duration(elapsed())}/{settings.maxSeconds}s
             </text>
             <text fg={context.theme.text.muted}>
@@ -706,13 +723,32 @@ export default Plugin.define({
     }
     setDebugStage("keys");
 
-    if (settings.debug) {
+    const debugPanel = process.env.OPENCODE_VOICE_DEBUG_PANEL === "1";
+    const debugFullscreen = process.env.OPENCODE_VOICE_DEBUG_FULLSCREEN === "1";
+
+    if (settings.debug && !debugPanel) {
       notify("Voice: debug auto-panel in 2.5s", "info");
       setTimeout(() => {
         void (async () => {
           const sessionID = await ensureSession(context);
           if (!sessionID) return;
           setTimeout(() => context.ui.panel.open(PANEL), 800);
+        })();
+      }, 2500);
+    }
+
+    if (debugPanel) {
+      setTimeout(() => {
+        void (async () => {
+          const sessionID = await ensureSession(context);
+          if (!sessionID) return;
+          setTimeout(
+            () =>
+              context.ui.panel.open(PANEL, {
+                presentation: debugFullscreen ? "fullscreen" : undefined,
+              }),
+            800,
+          );
         })();
       }, 2500);
     }

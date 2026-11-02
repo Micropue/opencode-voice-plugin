@@ -3,6 +3,7 @@ import { TextAttributes } from "@opentui/core";
 import type { PanelInput, Context } from "@opencode/plugin/tui/context";
 import type { Project, UsageLimitsInfo } from "@opencode/client";
 import type { Controller, PanelTab } from "../types.js";
+import { palette } from "../theme.js";
 import { clock, compactNumber, duration, money, oneLine, progressBar, resetAt } from "../format.js";
 import { spawn } from "node:child_process";
 
@@ -47,7 +48,7 @@ export function Dashboard(props: {
 
   const location = () => context.location ?? context.data.location.default();
   const width = () => Math.max(28, panel.width - 4);
-  const accent = theme.text.action.primary.base;
+  const accent = palette.accent;
 
   const [tab, setTab] = createSignal<Tab>("voice");
   createEffect(() => {
@@ -80,7 +81,9 @@ export function Dashboard(props: {
 
   const modelLabel = () => {
     const model = session()?.model;
-    return model ? `${model.providerID}/${model.id}` : "—";
+    if (model) return `${model.providerID}/${model.id}`;
+    const current = context.ui.model.current();
+    return current ? `${current.providerID}/${current.modelID}` : "—";
   };
 
   const agentLabel = () => session()?.agent ?? "—";
@@ -273,24 +276,26 @@ export function Dashboard(props: {
   const stateColor = () => {
     switch (controller.state()) {
       case "listening":
-        return theme.text.feedback.error.base;
+        return palette.error;
       case "transcribing":
       case "pasting":
-        return theme.text.feedback.warning.base;
+        return palette.warning;
       case "speaking":
-        return theme.text.feedback.success.base;
+        return palette.success;
       default:
         return theme.text.muted;
     }
   };
 
-  const sessionColor = () => (sessionStatus() === "running" ? theme.text.feedback.success.base : theme.text.muted);
+  const tall = () => context.renderer.height >= 36;
 
   return (
     <box flexDirection="column" height="100%" paddingLeft={1} paddingRight={1} paddingTop={1}>
       <box flexDirection="row">
         <text fg={accent} attributes={TextAttributes.BOLD}>VOICE ASSISTANT</text>
-        <text fg={sessionColor()} attributes={TextAttributes.BOLD}>{"  "}{sessionStatus() === "running" ? "● RUNNING" : "○ READY"}</text>
+        <Show when={sessionStatus() === "running"}>
+          <text fg={palette.success} attributes={TextAttributes.BOLD}>{"  "}● RUNNING</text>
+        </Show>
         <text fg={theme.text.muted}>{"   "}{controller.panelShortcutLabel} panel</text>
       </box>
       <text fg={theme.text.muted}>
@@ -323,7 +328,7 @@ export function Dashboard(props: {
           </box>
 
           <box flexDirection="column">
-            <For each={waveformRows(controller.levels(), 2, Math.max(16, width() - 2))}>
+            <For each={waveformRows(controller.levels(), tall() ? 4 : 2, Math.max(16, width() - 2))}>
               {(line) => (
                 <text fg={controller.state() === "listening" ? accent : theme.text.muted}>{line}</text>
               )}
@@ -342,7 +347,7 @@ export function Dashboard(props: {
           </box>
           <box flexDirection="row">
             <text fg={theme.text.muted}>LAST  </text>
-            <text fg={theme.text.feedback.success.base}>{oneLine(controller.lastText() || "—", width() - 6)}</text>
+            <text fg={palette.success}>{oneLine(controller.lastText() || "—", width() - 6)}</text>
           </box>
 
           <text fg={theme.text.muted} marginTop={1}>SESSION</text>
@@ -356,7 +361,7 @@ export function Dashboard(props: {
             <text fg={theme.text.muted}>   tokens  </text>
             <text fg={accent}>{compactNumber(tokenTotal())}</text>
             <text fg={theme.text.muted}>   cost  </text>
-            <text fg={theme.text.feedback.success.base}>{money(session()?.cost ?? 0)}</text>
+            <text fg={palette.success}>{money(session()?.cost ?? 0)}</text>
           </box>
 
           <text fg={theme.text.muted} marginTop={1}>HISTORY</text>
@@ -368,7 +373,7 @@ export function Dashboard(props: {
               </text>
             }
           >
-            <For each={controller.history().slice(0, 2)}>
+            <For each={controller.history().slice(0, tall() ? 4 : 2)}>
               {(item) => (
                 <box flexDirection="row">
                   <text fg={theme.text.muted}>{clock(item.at)}  </text>
@@ -379,7 +384,8 @@ export function Dashboard(props: {
             </For>
           </Show>
 
-          <text fg={theme.text.muted} marginTop={1}>
+          <box flexGrow={1} />
+          <text fg={theme.text.muted}>
             [r] rec   [s] speak   [x] stop   [c] clear   ·   esc
           </text>
         </box>
@@ -396,7 +402,7 @@ export function Dashboard(props: {
           </box>
 
           <text fg={theme.text.muted} marginTop={1}>RECENT</text>
-          <Show when={!projectError()} fallback={<text fg={theme.text.feedback.error.base}>{projectError()}</text>}>
+          <Show when={!projectError()} fallback={<text fg={palette.error}>{projectError()}</text>}>
             <For each={projects().slice(0, 6)}>
               {(project, index) => (
                 <text fg={index() === projectIndex() ? accent : theme.text.base}>
@@ -415,13 +421,13 @@ export function Dashboard(props: {
         <box flexDirection="column" marginTop={1}>
           <text fg={theme.text.muted}>OPENCODE GO</text>
           <text fg={theme.text.base}>{quota()?.workspace.name ?? "workspace"}</text>
-          <Show when={!quotaError()} fallback={<text fg={theme.text.feedback.error.base}>{quotaError()}</text>}>
+          <Show when={!quotaError()} fallback={<text fg={palette.error}>{quotaError()}</text>}>
             <Show when={quota()?.go} fallback={<text fg={theme.text.muted}>Go 额度不可用（未登录或服务不可用）</text>}>
               <For
                 each={[
                   ["5h", quota()?.go?.rolling, accent],
-                  ["week", quota()?.go?.weekly, theme.text.feedback.warning.base],
-                  ["month", quota()?.go?.monthly, theme.text.feedback.success.base],
+                  ["week", quota()?.go?.weekly, palette.warning],
+                  ["month", quota()?.go?.monthly, palette.success],
                 ] as const}
               >
                 {([label, meter, color]) => (
@@ -431,7 +437,7 @@ export function Dashboard(props: {
                       <text fg={color}>{progressBar(meter!.percent, 16)}</text>
                       <text fg={theme.text.base}> {Math.round(meter!.percent)}%</text>
                       <Show when={meter!.limited}>
-                        <text fg={theme.text.feedback.error.base}> LIMITED</text>
+                        <text fg={palette.error}> LIMITED</text>
                       </Show>
                       <text fg={theme.text.muted}>  reset {resetAt(meter!.resetsAt)}</text>
                     </box>

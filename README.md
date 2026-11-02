@@ -6,6 +6,10 @@
 >
 > 非 OpenCode 官方项目，与 OpenCode / Anomaly 无隶属关系。
 
+![OpenCode Voice 面板预览](docs/preview.png)
+
+> 面板预览使用 demo 数据，实际界面会跟随 OpenCode 主题。
+
 ## 功能
 
 - **长按说话（可选）**：`Option+V` 开始录音，松开停止。
@@ -167,3 +171,7 @@ OPENCODE_VOICE_DEBUG_RECORD=1 OPENCODE_VOICE_DEBUG_HELPER=selftest opencode --st
 ## 设计
 
 面板遵循 [tui-design](https://github.com/pageton/tui-design-skill)（MIT）的 dashboard 设计原则：单一强调色、语义状态色、留白优先、少用边框、键盘优先。
+
+## License
+
+MIT
