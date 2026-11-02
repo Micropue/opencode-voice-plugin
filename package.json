@@ -1,0 +1,23 @@
+{
+  "name": "opencode-voice-assistant",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Voice-first control panel for OpenCode V2",
+  "exports": {
+    "./tui": "./src/tui.tsx"
+  },
+  "scripts": {
+    "build:voice": "./scripts/build-voice.sh",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@opencode/client": "2.2.5",
+    "@opencode/plugin": "2.2.5",
+    "@opentui/core": "0.8.1",
+    "@opentui/solid": "0.8.1",
+    "@types/node": "^22.13.9",
+    "solid-js": "1.9.18",
+    "typescript": "^5.9.3"
+  }
+}

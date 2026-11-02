@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleDevelopmentRegion</key>
+  <string>zh_CN</string>
+  <key>CFBundleExecutable</key>
+  <string>opencode-voice</string>
+  <key>CFBundleIdentifier</key>
+  <string>com.micropue.opencode.voice</string>
+  <key>CFBundleInfoDictionaryVersion</key>
+  <string>6.0</string>
+  <key>CFBundleName</key>
+  <string>OpenCode Voice</string>
+  <key>CFBundleDisplayName</key>
+  <string>OpenCode Voice</string>
+  <key>CFBundlePackageType</key>
+  <string>APPL</string>
+  <key>CFBundleShortVersionString</key>
+  <string>0.1.0</string>
+  <key>CFBundleVersion</key>
+  <string>1</string>
+  <key>LSUIElement</key>
+  <true/>
+  <key>NSMicrophoneUsageDescription</key>
+  <string>OpenCode 语音助手需要麦克风来识别你的语音。</string>
+  <key>NSSpeechRecognitionUsageDescription</key>
+  <string>OpenCode 语音助手需要语音识别来把语音转成文字。</string>
+</dict>
+</plist>

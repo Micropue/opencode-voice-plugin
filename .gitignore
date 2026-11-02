@@ -1,0 +1,4 @@
+node_modules/
+bin/OpenCodeVoice.app/
+.DS_Store
+*.log
